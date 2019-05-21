@@ -1,0 +1,140 @@
+#!/bin/bash
+
+function partition-bootloader
+{
+    local p_disk=$1
+    ## part (old 1) ##B
+    #parted -s -a opt $p_disk mkpart primary 1MB 2MB && parted -s $p_disk set 1 bios_grub on
+
+    ## part 1 ##
+    # euefi bootloader, /boot
+    parted -s -a opt $p_disk mkpart primary 2MB 1GB &&
+        parted -s $p_disk set 1 esp on &&
+    mkfs.fat -F 32 $(get-disk-part $p_disk $DISK_BOOTLOADER_CONFIG_PART) &&
+        return 0
+    return 1
+}
+# called at the end of os installation
+
+function install-bootloader {
+    local p_disk=$1
+    function bios-grub
+    {
+        ## part 1 ##
+        grub-install --boot-directory=$ROOT_BOOT $p_disk
+    }
+    function uefi-grub
+    {
+        ## part 2 ##
+        grub-install --efi-directory=$ROOT_BOOT --bootloader-id=GRUB $p_disk
+    }
+    #bios-grub
+    #TODO implement uefi-grub installation configuration part 2.
+    uefi-grub
+}
+
+# note the order of code is the order of config file snippets wirting
+function mkconfig
+{
+    p_disk=$1
+    local _in=$CONFIG_SRC/bootloader.cfg
+    mkdir -p $ROOT_BOOT/grub
+    local _out=$ROOT_BOOT/grub/grub.cfg
+    parse-config $GRUB_CONF_PATH
+    # initialized bootloader environments
+    echo -e "insmod ext4\ninsmod gzip\n" > $_out
+    # if dongle exist set dongle priority to highest
+    #TODO read in rows with arbitrary row length
+    for ((i=0; i<${#MAT[@]}; i++)); do
+        if [ ${MAT[$i,NAME]} == 'root' ]; then
+            echo "default=${MAT[$i,UUID]}" >> $_out;
+            break;
+        fi
+    done
+    local _name=
+    local _linux=
+    local _uuid=
+    local _initramfs=
+    for ((i=0; i<${#MAT[@]}; i++)); do
+        _uuid=${MAT[$i,UUID]}
+        # length of mat isn't representation of rows, therefore -z $uuid is measure for rows length
+        if [[ -z "$_uuid" ]]; then
+            continue
+        fi
+        _name=${MAT[$i,NAME]};
+        _linux=${MAT[$i,LINUX]};
+        _initramfs=${MAT[$i,INITRAMFS]};
+        # note cmdline is used as communication line between kernel and initramfs,
+        # in this case to send bootloader entrypoint uuid, can you do better, without contaminating kernel cmdline?
+    done
+    [[ -z "$_uuid" ]] && _uuid=$(get-uuid $(get-disk-part $p_disk $DISK_BOOTLOADER_CONFIG_PART))
+    [[ -z "$_name" ]] && _name=$_uuid
+    [[ -z "$_linux" ]] && _linux=$KERNEL_PATH
+    [[ -z "$_initramfs" ]] && _initramfs=$INITRAMFS_PACKAGE
+    echo -e "menuentry '$_name' -id $_name {\n\tsearch --set=root --fs-uuid $_uuid\n\tlinux $_linux root=UUID=$_uuid bootloader=$_uuid\n\tinitrd $_initramfs\n}" >> $_out
+}
+
+
+: << 'COMMENT'
+## bootloader guidelines ##
+1- read bootloader configuration file from BOOTLOADER CONFIGURATION FILE.
+2- at least MAIN_OS partition exists, with it's initramfs, and potential decryption dongle, then boot.
+3- if failed, go to 4
+4- otherwise, fallback to resuce os partition if exists, otherwise, halt!
+
+parse_bootloader_config() {
+    # echo's entries each of format <UUID,KERNEL,INITRAMFS,NAME,ROOT>, or 0 for null
+    # TODO resolve regex to exclude file starting with hash sign.
+    awk_bootloader_config() {
+        echo $(cat ../config/bootloader.cfg | awk '{
+             entry = /^[a-zA-Z=0-9\-\/]+$/
+        UUID       = 0
+        KERNEL = 0
+        INITRAMFS = 0
+        NAME = 0
+        ROOT = 0
+        split($entry, arr, " ")
+        for (keyvalue in arr) {
+            split(arr[keyvalue], arr2, "=")
+            for (point in arr2) {
+                if (point%2 != 0) {
+                   if (arr2[point]=="UUID")
+                      UUID=arr2[point+1]
+                   else if (arr2[point]=="KERNEL")
+                      KERNEL=arr2[point+1]
+                   else if (arr2[point]=="INITRAMFS")
+                      INITRAMFS=arr2[point+1]
+                   else if (arr2[point]=="NAME")
+                      NAME=arr2[point+1]
+                   else if (arr2[point]=="ROOT")
+                      ROOT=arr2[point+1]
+                }
+            }
+        }
+        if (UUID != 0) { printf "%s %s %s %s %s", UUID, KERNEL, INITRAMFS, NAME, ROOT }
+        }')
+    }
+    print-menuentry() {
+        for r in $(seq 0 $(($menuentries_count-1))); do
+            for c in $(seq 0 $(($menuentries_columns-1))); do
+                printf " (%s) " ${menuentry[$r,$c]}
+            done
+            printf "\n"
+        done
+    }
+    row=0
+    col=0
+    for entry_point in $(awk_bootloader_config); do
+        echo "entry_point:$entry_point"
+        menuentry[$row,$col]=$entry_point
+        ((col++))
+        if [ $col -eq $(($menuentries_columns-1)) ]; then
+            col=0
+            ((row++))
+        fi
+    done
+    menuentries_count=$row
+    print-menuentry
+    if [ GRUB_BOOTLOADER ] && [ $menuentries_count -gt 0 ]; then grub; fi
+}
+COMMENT

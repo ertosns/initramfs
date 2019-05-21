@@ -1,0 +1,33 @@
+# configuration file for linux mapper services, lvm, dm-crypt, etc.
+# line starting with hash sign is ignored as comment
+## dm-crypt ##
+# each dm-crypt line is for resolution of encrypted arbitrary partition,
+# avaiable for kernel sysfs at initramfs time, each dm-crypt line is:
+# PART=uuid of the encrypted file
+# MOUNT_POINT=/path (DEFAULT /tmp)
+# KEY_PART=uuid of the key partition (DEFAULT bootloader uuid)
+# KEY_PATH=/path (DEFAULT /dongle.key)
+# KEY_SKIP=number of bytes to skip for the key
+# KEY_SIZE=size in bytes for the key  (DEFAULT 512)
+/dev/sda2: UUID="20ea150e-8c15-4f08-b55e-74fc37271603" TYPE="ext4" PARTUUID="506316dc-5db9-4b30-9e83-dbc02c299e14"
+/dev/loop0: TYPE="squashfs"
+/dev/loop1: TYPE="squashfs"
+/dev/loop2: TYPE="squashfs"
+/dev/loop3: TYPE="squashfs"
+/dev/loop4: TYPE="squashfs"
+/dev/loop5: TYPE="squashfs"
+/dev/loop6: TYPE="squashfs"
+/dev/loop7: TYPE="squashfs"
+/dev/sda1: UUID="F068-2294" TYPE="vfat" PARTLABEL="EFI System Partition" PARTUUID="913496f2-d7b1-489d-b54a-6b9969078f2e"
+/dev/loop8: TYPE="squashfs"
+/dev/loop9: TYPE="squashfs"
+/dev/loop10: TYPE="squashfs"
+/dev/loop11: TYPE="squashfs"
+/dev/loop12: TYPE="squashfs"
+/dev/loop13: TYPE="squashfs"
+/dev/loop14: TYPE="squashfs"
+/dev/loop15: TYPE="squashfs"
+/dev/sdc1: UUID="3FA3-8F4B" TYPE="vfat" PARTLABEL="primary" PARTUUID="cff22a67-d4f6-4c11-b147-3e67346e50d9"
+/dev/sdc2: UUID="c8fcb23a-ce47-4b10-b4f8-4df3e2742a61" TYPE="ext4" PARTLABEL="primary" PARTUUID="425195ec-55bc-4e58-b65b-ac9fbc2a680f"
+/dev/sdc3: UUID="afe65689-4990-426e-9376-e2b752345e90" TYPE="ext4" PARTLABEL="primary" PARTUUID="4e067a90-41dc-4fe1-932b-57fd8694a333"
+/dev/sdc4: UUID="f0df9630-1fff-4215-b47d-52f7b7c288b6" TYPE="crypto_LUKS" PARTLABEL="primary" PARTUUID="cf6a17ee-e202-45be-adab-279b6350feae"

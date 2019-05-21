@@ -1,0 +1,56 @@
+# line starting with hash sign is unprocessed.
+# each line represents bootloader entry, and formated as key-value space separated.
+# each line must have the following keys with corresponding value:
+# UUID= uuid for partition to boot from, each line can have at least this kye
+# INITRAMFS= path to initramfs image on the specified UUID, with default being /boot/initramfs.cpio
+# KERNEL= path to kernel image on the specified UUID, with default being /boot/vmlinuz
+# NAME= entry name, with default being, UUID value
+# PRIORITY= entry priority with with default priority set to highest by default.
+UUID=NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
+loop0         7:0    0    13M  1 loop  /snap/gnome-characters/103
+loop1         7:1    0 140.9M  1 loop  /snap/gnome-3-26-1604/70
+loop2         7:2    0   3.7M  1 loop  /snap/gnome-system-monitor/51
+loop3         7:3    0   2.3M  1 loop  /snap/gnome-calculator/260
+loop4         7:4    0   3.7M  1 loop  /snap/gnome-system-monitor/57
+loop5         7:5    0  87.9M  1 loop  /snap/core/5742
+loop6         7:6    0    13M  1 loop  /snap/gnome-characters/139
+loop7         7:7    0   2.3M  1 loop  /snap/gnome-calculator/180
+loop8         7:8    0  86.9M  1 loop  /snap/core/4917
+loop9         7:9    0  34.2M  1 loop  /snap/gtk-common-themes/808
+loop10        7:10   0  34.7M  1 loop  /snap/gtk-common-themes/319
+loop11        7:11   0  14.5M  1 loop  /snap/gnome-logs/45
+loop12        7:12   0 140.7M  1 loop  /snap/gnome-3-26-1604/74
+loop13        7:13   0  14.5M  1 loop  /snap/gnome-logs/37
+loop14        7:14   0  34.6M  1 loop  /snap/gtk-common-themes/818
+sda           8:0    0 931.5G  0 disk  
+├─sda1        8:1    0   512M  0 part  /boot/efi
+└─sda2        8:2    0   931G  0 part  /
+sdb           8:16   1  57.8G  0 disk  
+├─sdb1        8:17   1   571M  0 part  
+├─sdb2        8:18   1   1.3G  0 part  /mnt
+├─sdb3        8:19   1    55G  0 part  /media/traverse/afe65689-4990-426e-9376-e2b752345e90
+└─sdb4        8:20   1   960M  0 part  
+  └─private 253:0    0   958M  0 crypt /mnt
+sr0          11:0    1  1024M  0 rom   
+/dev/sda2: UUID="20ea150e-8c15-4f08-b55e-74fc37271603" TYPE="ext4" PARTUUID="506316dc-5db9-4b30-9e83-dbc02c299e14"
+/dev/loop0: TYPE="squashfs"
+/dev/loop1: TYPE="squashfs"
+/dev/loop2: TYPE="squashfs"
+/dev/loop3: TYPE="squashfs"
+/dev/loop4: TYPE="squashfs"
+/dev/loop5: TYPE="squashfs"
+/dev/loop6: TYPE="squashfs"
+/dev/loop7: TYPE="squashfs"
+/dev/sda1: UUID="F068-2294" TYPE="vfat" PARTLABEL="EFI System Partition" PARTUUID="913496f2-d7b1-489d-b54a-6b9969078f2e"
+/dev/loop8: TYPE="squashfs"
+/dev/loop9: TYPE="squashfs"
+/dev/loop10: TYPE="squashfs"
+/dev/loop11: TYPE="squashfs"
+/dev/loop12: TYPE="squashfs"
+/dev/loop13: TYPE="squashfs"
+/dev/loop14: TYPE="squashfs"
+/dev/sdb1: UUID="3FA3-8F4B" TYPE="vfat" PARTLABEL="primary" PARTUUID="cff22a67-d4f6-4c11-b147-3e67346e50d9"
+/dev/sdb2: UUID="c8fcb23a-ce47-4b10-b4f8-4df3e2742a61" TYPE="ext4" PARTLABEL="primary" PARTUUID="425195ec-55bc-4e58-b65b-ac9fbc2a680f"
+/dev/sdb3: UUID="afe65689-4990-426e-9376-e2b752345e90" TYPE="ext4" PARTLABEL="primary" PARTUUID="4e067a90-41dc-4fe1-932b-57fd8694a333"
+/dev/sdb4: UUID="f0df9630-1fff-4215-b47d-52f7b7c288b6" TYPE="crypto_LUKS" PARTLABEL="primary" PARTUUID="cf6a17ee-e202-45be-adab-279b6350feae"
+/dev/mapper/private: UUID="3995296f-f843-478a-8434-c28de4d666bf" TYPE="ext4"

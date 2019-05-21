@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# esp, boot devices booth need to be present.
+function install-grub {
+
+}

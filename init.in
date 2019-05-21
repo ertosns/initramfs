@@ -1,0 +1,118 @@
+#!/bin/bash
+#/usr/share/mkinitrmfs/init.in
+
+source ./include/environment.sh
+source $ORIGIN_DIR/install.sh
+source $ORIGIN_DIR/dongle.sh
+source $ORIGIN_DIR/mkinitrmfs.sh
+
+DBG $FUNCNAME
+exec 5> /tmp/dongle.dbg
+BASH_XTRACEFD="5"
+PS4=" $BASH_SOURCE $BASH_SOURCED ($LINENO):"
+set -x
+
+
+function initramfs-space
+{
+    local PATH=/bin:/usr/bin:/sbin:/usr/sbin
+    export PATH
+    ## stage 1.0 initialized environment ##
+
+    # TODO isn't first arg for dev, and second for dir?
+    mount -t devtmpfs devtmpfs /dev
+    mount -t proc     proc     /proc
+    mount -t sysfs    sysfs    /sys
+    mount -t tmpfs    tmpfs    /tmp
+    mount -t tmpfs    tmpfs    /run
+
+    # loader initramfs drivers
+    # disk drivers
+    local drivers=(usb_storage ata-generic ahci)
+    for driver in ${drivers[@]}; do
+	    modprobe $driver
+    done
+
+    # udev intialization #
+
+    # udevd location depends on version
+    if [ -x /sbin/udevd ]; then
+        UDEVD=/sbin/udevd
+    elif [ -x /lib/udev/udevd ]; then
+        UDEVD=/lib/udev/udevd
+    elif [ -x /lib/systemd/systemd-udevd ]; then
+        UDEVD=/lib/systemd/systemd-udevd
+    else
+        ERR "Cannot find udevd nor systemd-udevd"
+        problem
+    fi
+    ${UDEVD} --daemon --resolve-names=never
+    udevadm trigger
+    udevadm settle
+    if [ -f /etc/mdadm.conf ] ; then mdadm -As                       ; fi
+    if [ -x /sbin/vgchange  ] ; then /sbin/vgchange -a y > /dev/null ; fi
+    if [ -n "$rootdelay"    ] ; then sleep "$rootdelay"              ; fi
+}
+
+if [ $# -gt 0 ]; then
+    if [ "$1" == "-p" ]; then
+        # for clone-boot-environment
+        #CLONE_INSTALLING_MEDIUM=true
+        _disk=$(prompt-select-disk $SELECT_INSTALLING_DONGLE)
+        if $(yes-no-prompt "THERE IS NO UNDO, ARE YOU SURE YOU PICK THE RIGHT DISK? ($_disk)"); then
+            installing-medium $_disk
+        fi
+    fi
+fi
+exit
+
+if false; then
+    initramfs-space
+    parse-config $INSTALL_LAYOUT
+    local MODE=
+    for ((i=0; i<$ROWS; i++)); do
+        if [ RET[$i,$MODE] == $INSTALL_MODE ]; then
+            MODE=$INSTALL_MODE
+        elif [RET[$i,$MODE] == $EXECUTE_MODE ]; then
+            MODE=$EXECUTE_MODE
+        fi
+    done
+    if [ $MODE == $INSTALL_MODE ]; then
+        _dev=$(select-partition $WHAT_IS_INSTALLATION_DISK)
+        install-medium $_dev
+    elif [ $MODE == $EXECUTE_MODE ]; then
+        ## stage 1.1 ##
+        {
+            #install boot partition temporarily
+            _boot_part=$(bootloader-part)
+            mount -U ${_boot_part[1]} /boot
+        }
+        #TODO ramify to the installation mode, or execution mode, or installation creation.
+        # mount root, and potentially encrypted partitions.
+        INF 'init dongle'
+        sleep 5
+        if [ $(init-dongle $ROOT) -ne 0 ]; then
+            # loop through root partitions for each try to boot into fallback-part (4)
+            :
+        fi
+        INF 'init dongle finished, switch_root'
+        {
+            # install bootloader under new root
+            umount -U ${_boot_part[1]}
+            mount -U ${_boot_part[1]} $ROOT/boot
+        }
+        sleep 5
+        ## stage 1.2...1.9 networking, lvm, etc. ##
+        # TODO ajust /etc/fstab to account for all listed swap partitions, and files
+        swapon -a
+        SH
+        ## stage 1.9 ##
+        #TODO customization
+        #TODO replce it with change root
+        killall -w ${UDEVD##*/}
+        #set +x
+        exec switch_root $ROOT /sbin/init || SH
+    fi
+fi
+
+unset -x

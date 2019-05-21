@@ -1,0 +1,34 @@
+# bash valid sentax, to be sourced/parsed in installation scripts
+# each line is expected to have KEY=VALUE with VALUE being either true or false.
+
+DONGLE_SUPPORT=true
+
+# generated bootloader configuration file is set to grub by default.
+GRUB_BOOTLOADER=true
+
+# weither to prompt for additional partition decryption other than those listed in mapper.cfg
+DM_CRYPT_PROMPT=false
+
+# default key partitions
+# DEFAULT_KEY_PART=
+
+# default key location
+DEFAULT_KEY_LOCATION=/dongle.key
+
+# default key size
+DEFAULT_KEY_SIZE=512
+
+# default key skip
+DEFAULT_KEY_SKIP=
+
+LANGUAGE=en
+
+# note! never uncomment, or delete followiing variable
+# encryption mechanism.
+ENC_MECHANISM=luks
+
+# use default without prompting
+DEFAULT=false
+
+# development time verbose mode
+DEBUG=true

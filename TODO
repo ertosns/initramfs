@@ -1,0 +1,7 @@
+0- os-installation scripts {arch, debian}, from storage, and network (require configuring networking)
+1- rollback filesystem API with btrs.
+2- encrypted swapfile.
+3- hibernate if the swap if removed. (encrypted swapfile is required for this).
+4- add tor, and torify with automated bridges.
+5- support for IPFS with working groups.
+6- support nix package manager.
